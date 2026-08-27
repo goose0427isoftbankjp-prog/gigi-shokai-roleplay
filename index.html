@@ -93,6 +93,17 @@ button{font-family:inherit;cursor:pointer;}
 @keyframes pulse{0%,100%{opacity:1;}50%{opacity:0.25;}}
 .call-status .label{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--stamp);letter-spacing:0.05em;}
 .call-status .timer{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--ink-soft);margin-left:auto;}
+.voice-toggle{
+  border:1px solid var(--paper-line); background:var(--card-bg); border-radius:14px;
+  font-size:13px; padding:3px 9px; line-height:1.4; color:var(--ink-soft);
+}
+.voice-toggle.on{background:var(--teal-soft); border-color:var(--teal); color:var(--teal);}
+.mic-btn{
+  border:1px solid var(--paper-line); background:var(--card-bg); border-radius:50%;
+  width:42px; height:42px; font-size:18px; flex-shrink:0; line-height:1;
+}
+.mic-btn.listening{background:var(--stamp); border-color:var(--stamp); animation:pulse 1s infinite;}
+#mic-status{font-size:12px; color:var(--ink-soft); text-align:center; margin-top:6px; min-height:16px;}
 .rx-slip{
   border-top:1px dashed var(--paper-line); border-bottom:1px dashed var(--paper-line);
   padding:10px 0; margin-top:6px;
@@ -190,6 +201,7 @@ button{font-family:inherit;cursor:pointer;}
       <div class="call-status">
         <div class="dot"></div>
         <div class="label">通話中 — 内線</div>
+        <button class="voice-toggle" id="btn-voice-toggle" title="AIの声を読み上げる">🔇</button>
         <div class="timer" id="call-timer">00:00</div>
       </div>
       <div class="eyebrow" id="call-dept"></div>
@@ -205,9 +217,11 @@ button{font-family:inherit;cursor:pointer;}
     <div id="chat-error"></div>
 
     <div class="input-row">
-      <input type="text" id="chat-input" placeholder="医師への発言を入力…" autocomplete="off">
+      <button class="mic-btn" id="btn-mic" title="音声入力">🎤</button>
+      <input type="text" id="chat-input" placeholder="医師への発言を入力…（または🎤で話す）" autocomplete="off">
       <button class="send-btn" id="btn-send">送信</button>
     </div>
+    <div id="mic-status"></div>
     <div class="end-row">
       <button class="end-btn" id="btn-end">通話を終える &amp; 振り返りへ</button>
     </div>
@@ -232,8 +246,33 @@ let state = {
   scenario: null,
   messages: [],
   startTime: null,
-  timerInterval: null
+  timerInterval: null,
+  voiceOutput: false
 };
+
+const SpeechRecognitionCtor = window.SpeechRecognition || window.webkitSpeechRecognition;
+const speechSupported = !!SpeechRecognitionCtor;
+const ttsSupported = 'speechSynthesis' in window;
+let recognizer = null;
+
+function pickJapaneseVoice(){
+  const voices = window.speechSynthesis.getVoices();
+  return voices.find(v => v.lang && v.lang.toLowerCase().startsWith('ja')) || null;
+}
+
+function speak(text){
+  if(!ttsSupported || !state.voiceOutput) return;
+  window.speechSynthesis.cancel();
+  const utter = new SpeechSynthesisUtterance(text);
+  utter.lang = 'ja-JP';
+  const voice = pickJapaneseVoice();
+  if(voice) utter.voice = voice;
+  window.speechSynthesis.speak(utter);
+}
+
+function stopSpeaking(){
+  if(ttsSupported) window.speechSynthesis.cancel();
+}
 
 function renderMenu(){
   const grid = document.getElementById('scenario-grid');
@@ -261,6 +300,7 @@ function showScreen(id){
 }
 
 function startCall(sc){
+  stopSpeaking();
   state.scenario = sc;
   state.messages = [];
   document.getElementById('call-dept').textContent = sc.dept;
@@ -298,6 +338,7 @@ function addBubble(role, text, who){
   area.appendChild(b);
   area.scrollTop = area.scrollHeight;
   window.scrollTo(0, document.body.scrollHeight);
+  if(role === 'doctor') speak(text);
 }
 
 function addTyping(){
@@ -403,8 +444,52 @@ document.getElementById('chat-input').addEventListener('keydown', e=>{
 });
 document.getElementById('btn-back').addEventListener('click', ()=>{
   clearInterval(state.timerInterval);
+  stopSpeaking();
   showScreen('screen-menu');
 });
+
+const voiceToggleBtn = document.getElementById('btn-voice-toggle');
+if(!ttsSupported){
+  voiceToggleBtn.disabled = true;
+  voiceToggleBtn.title = 'このブラウザは音声読み上げに対応していません';
+}
+voiceToggleBtn.addEventListener('click', ()=>{
+  state.voiceOutput = !state.voiceOutput;
+  voiceToggleBtn.textContent = state.voiceOutput ? '🔊' : '🔇';
+  voiceToggleBtn.classList.toggle('on', state.voiceOutput);
+  if(!state.voiceOutput) stopSpeaking();
+});
+
+const micBtn = document.getElementById('btn-mic');
+const micStatus = document.getElementById('mic-status');
+if(!speechSupported){
+  micBtn.disabled = true;
+  micBtn.title = 'このブラウザは音声入力に対応していません';
+  micBtn.style.opacity = '0.4';
+} else {
+  micBtn.addEventListener('click', ()=>{
+    if(recognizer) return;
+    recognizer = new SpeechRecognitionCtor();
+    recognizer.lang = 'ja-JP';
+    recognizer.interimResults = false;
+    recognizer.maxAlternatives = 1;
+    micBtn.classList.add('listening');
+    micStatus.textContent = '聞き取り中…';
+    recognizer.onresult = (e)=>{
+      const transcript = e.results[0][0].transcript;
+      document.getElementById('chat-input').value = transcript;
+      micStatus.textContent = '';
+    };
+    recognizer.onerror = (e)=>{
+      micStatus.textContent = '音声入力エラー: ' + (e.error === 'not-allowed' ? 'マイクの使用が許可されていません' : e.error);
+    };
+    recognizer.onend = ()=>{
+      micBtn.classList.remove('listening');
+      recognizer = null;
+    };
+    recognizer.start();
+  });
+}
 
 function feedbackSystemPrompt(){
   const sc = state.scenario;
@@ -443,6 +528,7 @@ ${transcript}
 
 document.getElementById('btn-end').addEventListener('click', async ()=>{
   clearInterval(state.timerInterval);
+  stopSpeaking();
   if(state.messages.length === 0){
     showScreen('screen-menu');
     return;
