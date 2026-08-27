@@ -561,7 +561,7 @@ document.getElementById('btn-end').addEventListener('click', async ()=>{
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        max_tokens: 1200,
+        max_tokens: 3000,
         messages: [{ role: "user", content: feedbackSystemPrompt() }]
       })
     });
