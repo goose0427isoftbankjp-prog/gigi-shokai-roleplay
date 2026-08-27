@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>疑義照会ロールプレイ研修</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@500;700&family=Zen+Kaku+Gothic+New:wght@400;500;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+:root{
+  --paper:#EEF0E9;
+  --paper-line:#C9CCB8;
+  --card-bg:#FBFAF4;
+  --ink:#1F2E3D;
+  --ink-soft:#5B6B74;
+  --stamp:#C1421B;
+  --stamp-soft:#F4DCD2;
+  --teal:#2F6E62;
+  --teal-soft:#DCEAE5;
+  --gold:#A9822E;
+  --danger:#B23A2E;
+}
+*{box-sizing:border-box;}
+body{
+  margin:0;
+  background:var(--paper);
+  background-image:
+    linear-gradient(var(--paper-line) 1px, transparent 1px);
+  background-size: 100% 32px;
+  color:var(--ink);
+  font-family:'Zen Kaku Gothic New', sans-serif;
+  min-height:100vh;
+}
+.wrap{max-width:640px;margin:0 auto;padding:20px 16px 48px;}
+h1,h2,h3{font-family:'Shippori Mincho', serif; font-weight:700; margin:0;}
+.eyebrow{
+  font-family:'JetBrains Mono', monospace;
+  font-size:11px;
+  letter-spacing:0.12em;
+  color:var(--gold);
+  text-transform:uppercase;
+}
+button{font-family:inherit;cursor:pointer;}
+.hidden{display:none !important;}
+
+/* ---------- header ---------- */
+.header{padding:18px 0 22px; border-bottom:2px solid var(--ink); margin-bottom:22px; position:relative;}
+.header h1{font-size:23px; line-height:1.4;}
+.header p{margin:8px 0 0; font-size:13.5px; color:var(--ink-soft); line-height:1.7;}
+.header .seal{
+  position:absolute; top:14px; right:0;
+  width:52px;height:52px;border-radius:50%;
+  border:2px solid var(--stamp); color:var(--stamp);
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Shippori Mincho',serif; font-weight:700; font-size:13px;
+  transform:rotate(-8deg); letter-spacing:0.05em;
+  writing-mode:vertical-rl;
+}
+
+/* ---------- scenario grid ---------- */
+.grid{display:flex;flex-direction:column;gap:12px;}
+.scenario-card{
+  background:var(--card-bg);
+  border:1px solid var(--paper-line);
+  border-left:4px solid var(--gold);
+  border-radius:2px;
+  padding:14px 16px;
+  text-align:left;
+  transition:transform .12s ease, border-color .12s ease;
+}
+.scenario-card:active{transform:scale(0.99);}
+.scenario-card .row1{display:flex;justify-content:space-between;align-items:baseline;gap:8px;}
+.scenario-card .dept{
+  font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--teal);
+  background:var(--teal-soft); padding:2px 7px; border-radius:2px; white-space:nowrap;
+}
+.scenario-card h3{font-size:16px; margin-top:6px;}
+.scenario-card .sub{font-size:12.5px; color:var(--ink-soft); margin-top:5px; line-height:1.6;}
+.scenario-card .stars{font-size:11px; color:var(--stamp); margin-top:8px; letter-spacing:1px;}
+
+/* ---------- call screen ---------- */
+.call-header{
+  background:var(--card-bg); border:1px solid var(--paper-line);
+  border-radius:2px; padding:14px 16px; margin-bottom:14px;
+  position:relative;
+}
+.back-btn{
+  background:none;border:none;color:var(--ink-soft);font-size:13px;
+  padding:0 0 10px; display:flex;align-items:center;gap:4px;
+}
+.call-status{display:flex;align-items:center;gap:8px;margin-bottom:10px;}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--stamp);animation:pulse 1.4s infinite;}
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:0.25;}}
+.call-status .label{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--stamp);letter-spacing:0.05em;}
+.call-status .timer{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--ink-soft);margin-left:auto;}
+.rx-slip{
+  border-top:1px dashed var(--paper-line); border-bottom:1px dashed var(--paper-line);
+  padding:10px 0; margin-top:6px;
+}
+.rx-slip .watermark{
+  font-family:'Shippori Mincho',serif; font-size:11px; color:var(--ink-soft);
+  letter-spacing:0.15em; margin-bottom:4px;
+}
+.rx-slip .patient{font-size:13px; color:var(--ink-soft); margin-bottom:6px; line-height:1.6;}
+.rx-slip .drug-line{
+  font-family:'JetBrains Mono',monospace; font-size:12.5px; color:var(--ink);
+  padding:3px 0; line-height:1.7; border-left:2px solid var(--gold); padding-left:8px; margin-bottom:3px;
+}
+
+/* ---------- chat ---------- */
+.chat-area{
+  min-height:280px; display:flex; flex-direction:column; gap:10px;
+  padding:4px 2px 14px;
+}
+.bubble{max-width:82%; padding:9px 13px; border-radius:14px; font-size:14.5px; line-height:1.6;}
+.bubble.doctor{
+  align-self:flex-start; background:var(--card-bg); border:1px solid var(--paper-line);
+  border-bottom-left-radius:3px;
+}
+.bubble.doctor .who{font-family:'JetBrains Mono',monospace;font-size:10.5px;color:var(--teal);margin-bottom:3px;}
+.bubble.me{
+  align-self:flex-end; background:var(--ink); color:#F3F1E7;
+  border-bottom-right-radius:3px;
+}
+.bubble.typing{align-self:flex-start; background:var(--card-bg); border:1px solid var(--paper-line); padding:11px 15px;}
+.typing-dots span{display:inline-block;width:5px;height:5px;border-radius:50%;background:var(--ink-soft);margin-right:3px;animation:tdot 1s infinite;}
+.typing-dots span:nth-child(2){animation-delay:.15s;}
+.typing-dots span:nth-child(3){animation-delay:.3s;}
+@keyframes tdot{0%,60%,100%{opacity:.3;}30%{opacity:1;}}
+
+.input-row{display:flex;gap:8px; position:sticky; bottom:0; background:var(--paper); padding-top:8px;}
+.input-row input{
+  flex:1; border:1px solid var(--paper-line); border-radius:20px; padding:10px 16px;
+  font-size:14.5px; font-family:inherit; background:var(--card-bg); color:var(--ink);
+}
+.input-row input:focus{outline:none; border-color:var(--teal);}
+.send-btn, .end-btn{
+  border:none; border-radius:20px; padding:10px 18px; font-size:13.5px; font-weight:500;
+}
+.send-btn{background:var(--ink); color:#F3F1E7;}
+.send-btn:disabled{opacity:0.4;}
+.end-row{display:flex;justify-content:center;margin-top:14px;}
+.end-btn{background:none; border:1px solid var(--stamp); color:var(--stamp); border-radius:2px; padding:9px 20px; font-size:13px;}
+
+/* ---------- feedback ---------- */
+.fb-card{background:var(--card-bg); border:1px solid var(--paper-line); border-radius:2px; padding:18px 18px 20px; margin-bottom:14px;}
+.fb-score{display:flex; align-items:center; gap:12px; margin-bottom:16px;}
+.fb-score .stars{font-size:22px; color:var(--stamp); letter-spacing:2px;}
+.fb-score .num{font-family:'JetBrains Mono',monospace; font-size:13px; color:var(--ink-soft);}
+.fb-verdict{
+  display:inline-block; font-size:12px; padding:4px 10px; border-radius:2px; margin-bottom:14px;
+  font-family:'JetBrains Mono',monospace;
+}
+.fb-verdict.ok{background:var(--teal-soft); color:var(--teal);}
+.fb-verdict.ng{background:var(--stamp-soft); color:var(--stamp);}
+.fb-section{margin-bottom:16px;}
+.fb-section h4{font-size:12.5px; font-family:'JetBrains Mono',monospace; color:var(--gold); letter-spacing:0.05em; margin:0 0 8px; text-transform:uppercase;}
+.fb-section ul{margin:0; padding-left:18px;}
+.fb-section li{font-size:13.5px; line-height:1.75; margin-bottom:5px; color:var(--ink);}
+.fb-model{
+  background:var(--teal-soft); border-left:3px solid var(--teal); padding:11px 13px; border-radius:2px;
+  font-size:13.5px; line-height:1.7; color:#1c443c;
+}
+.fb-comment{font-size:13.5px; line-height:1.8; color:var(--ink-soft); font-style:normal; margin-top:14px; border-top:1px dashed var(--paper-line); padding-top:14px;}
+.retry-row{display:flex; gap:10px; margin-top:6px;}
+.retry-row button{flex:1; padding:11px; border-radius:2px; font-size:13.5px; border:1px solid var(--ink);}
+.retry-row .primary{background:var(--ink); color:#F3F1E7;}
+.retry-row .secondary{background:none; color:var(--ink);}
+
+.err{font-size:13px; color:var(--danger); background:var(--stamp-soft); padding:10px 12px; border-radius:2px; margin-top:10px;}
+.loading-line{font-size:12.5px; color:var(--ink-soft); text-align:center; padding:16px 0; font-family:'JetBrains Mono',monospace;}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div id="screen-menu">
+    <div class="header">
+      <div class="eyebrow">新入職員研修 / 薬剤師業務</div>
+      <h1>疑義照会ロールプレイ</h1>
+      <p>処方箋を確認し、気になる点があれば内線で処方医(AI)に電話をかけてください。事例を選ぶと通話が始まります。実際の電話のつもりで、名乗り・要点・根拠を意識して話してみましょう。</p>
+      <div class="seal">研修用</div>
+    </div>
+    <div class="grid" id="scenario-grid"></div>
+  </div>
+
+  <div id="screen-call" class="hidden">
+    <button class="back-btn" id="btn-back">&larr; 事例一覧へ戻る</button>
+    <div class="call-header">
+      <div class="call-status">
+        <div class="dot"></div>
+        <div class="label">通話中 — 内線</div>
+        <div class="timer" id="call-timer">00:00</div>
+      </div>
+      <div class="eyebrow" id="call-dept"></div>
+      <h3 id="call-title" style="font-size:16px;margin-top:4px;"></h3>
+      <div class="rx-slip">
+        <div class="watermark">処方箋 R x</div>
+        <div class="patient" id="call-patient"></div>
+        <div id="call-drugs"></div>
+      </div>
+    </div>
+
+    <div class="chat-area" id="chat-area"></div>
+    <div id="chat-error"></div>
+
+    <div class="input-row">
+      <input type="text" id="chat-input" placeholder="医師への発言を入力…" autocomplete="off">
+      <button class="send-btn" id="btn-send">送信</button>
+    </div>
+    <div class="end-row">
+      <button class="end-btn" id="btn-end">通話を終える &amp; 振り返りへ</button>
+    </div>
+  </div>
+
+  <div id="screen-feedback" class="hidden">
+    <div class="header" style="border-bottom:2px solid var(--ink);">
+      <div class="eyebrow">振り返り</div>
+      <h1 style="font-size:20px;" id="fb-title"></h1>
+    </div>
+    <div id="fb-body"></div>
+  </div>
+
+</div>
+
+<script>
+const API_ENDPOINT = "/api/gemini";
+
+const scenarios = [
+  {
+    id: "peds-dose",
+    title: "小児の投与量",
+    dept: "小児科",
+    stars: 2,
+    patient: "5歳・体重18kg。発熱による受診。",
+    drugs: [
+      "カロナール錠200 1回2.5錠(500mg) 1日3回 毎食後 5日分"
+    ],
+    persona: "やや早口で急いでいるが、きちんと理由を説明すれば聞く耳を持つ小児科医。外来の合間で対応している。",
+    issue: "アセトアミノフェンの小児用量は通常10〜15mg/kg/回が目安。本処方は500mg/18kg≒27.8mg/kg/回であり、1日総量も上限(60mg/kg/日目安)に近く過量の可能性がある。体重換算での確認・減量提案が必要。"
+  },
+  {
+    id: "interaction",
+    title: "併用薬との相互作用",
+    dept: "整形外科",
+    stars: 3,
+    patient: "72歳男性。心房細動でワルファリン内服中(お薬手帳に記載あり)。腰痛で受診。",
+    drugs: [
+      "ロキソプロフェン錠60mg 1回1錠 1日3回 毎食後 7日分"
+    ],
+    persona: "「痛み止めなんだから、とりあえず出しておいて」と言いがちな、やや高圧的でせっかちな整形外科医。理由を明確に示せば折れるが、あいまいな指摘には強く出る。",
+    issue: "NSAIDsはワルファリンの作用を増強し出血リスクを高めるため併用注意。アセトアミノフェンなど他剤への変更提案、または慎重な経過観察の相談が望ましい。"
+  },
+  {
+    id: "renal",
+    title: "腎機能低下患者への常用量処方",
+    dept: "内科",
+    stars: 3,
+    patient: "78歳女性。eGFR 25(直近の検査値、電子カルテに記載あり)。2型糖尿病。",
+    drugs: [
+      "メトホルミン塩酸塩錠250mg 1回2錠 1日2回 朝夕食後 30日分"
+    ],
+    persona: "多くの患者を抱えて忙しい内科医。検査値を見落としていることが多いが、指摘されれば素直に確認し対応する。",
+    issue: "メトホルミンは腎排泄型でeGFR30未満は原則禁忌(乳酸アシドーシスのリスク)。腎機能の確認と減量・中止、代替薬の検討が必要。"
+  },
+  {
+    id: "duplicate",
+    title: "重複投薬の疑い",
+    dept: "消化器内科",
+    stars: 1,
+    patient: "60歳男性。健診で胃の不調を指摘され受診。お薬手帳には他院(耳鼻科)からのタケキャブ錠10mg 1日1回が継続処方中と記載あり。",
+    drugs: [
+      "ネキシウムカプセル20mg 1回1カプセル 1日1回 朝食後 28日分"
+    ],
+    persona: "外来数が多く、お薬手帳の確認まで手が回っていないことが多い消化器内科医。指摘には比較的オープンで、確認すればすぐ納得する。",
+    issue: "P-CAB(タケキャブ)とPPI(ネキシウム)はいずれも酸分泌抑制薬であり、作用機序は異なるが同種同効の重複投与にあたる。処方意図の確認と、いずれか一方への整理が必要。"
+  },
+  {
+    id: "allergy",
+    title: "アレルギー歴のある薬剤",
+    dept: "耳鼻咽喉科",
+    stars: 2,
+    patient: "34歳女性。急性副鼻腔炎の疑い。薬歴に『ペニシリン系で発疹の既往あり』と記載。",
+    drugs: [
+      "サワシリンカプセル250mg 1回1カプセル 1日3回 毎食後 7日分"
+    ],
+    persona: "外来が押していて焦り気味だが、アレルギー歴を伝えられれば即座に代替薬に切り替える耳鼻科医。",
+    issue: "サワシリン(アモキシシリン)はペニシリン系抗菌薬であり、既往のペニシリンアレルギーと抵触する可能性が高い。速やかな確認と代替系統の抗菌薬への変更提案が必要。"
+  },
+  {
+    id: "unclear-dosage",
+    title: "用法の記載不備",
+    dept: "研修医(内科)",
+    stars: 1,
+    patient: "45歳男性。不眠を訴えて受診。",
+    drugs: [
+      "マイスリー錠5mg 1回1錠 不眠時 屯用 10回分(上限記載なし)"
+    ],
+    persona: "経験の浅い研修医で、指示があいまいなことに自分でも気づいていないことが多い。丁寧に聞かれると素直に確認してくれる、疑義照会には比較的やりやすい相手。",
+    issue: "頓用指示に1日の上限使用回数や、連用時の注意(依存性のある睡眠薬のため)が明記されていない。1日の上限回数・使用間隔の明確化が必要。"
+  }
+];
+
+let state = {
+  scenario: null,
+  messages: [],
+  startTime: null,
+  timerInterval: null
+};
+
+function renderMenu(){
+  const grid = document.getElementById('scenario-grid');
+  grid.innerHTML = '';
+  scenarios.forEach(sc => {
+    const card = document.createElement('button');
+    card.className = 'scenario-card';
+    card.innerHTML = `
+      <div class="row1">
+        <h3>${sc.title}</h3>
+        <span class="dept">${sc.dept}</span>
+      </div>
+      <div class="sub">${sc.patient}</div>
+      <div class="stars">${'●'.repeat(sc.stars)}${'○'.repeat(3-sc.stars)} <span style="color:var(--ink-soft);font-family:'Zen Kaku Gothic New',sans-serif;">難易度</span></div>
+    `;
+    card.addEventListener('click', () => startCall(sc));
+    grid.appendChild(card);
+  });
+}
+
+function showScreen(id){
+  ['screen-menu','screen-call','screen-feedback'].forEach(s=>{
+    document.getElementById(s).classList.toggle('hidden', s!==id);
+  });
+}
+
+function startCall(sc){
+  state.scenario = sc;
+  state.messages = [];
+  document.getElementById('call-dept').textContent = sc.dept;
+  document.getElementById('call-title').textContent = sc.title;
+  document.getElementById('call-patient').textContent = sc.patient;
+  document.getElementById('call-drugs').innerHTML = sc.drugs.map(d=>`<div class="drug-line">${d}</div>`).join('');
+  document.getElementById('chat-area').innerHTML = '';
+  document.getElementById('chat-error').innerHTML = '';
+  document.getElementById('chat-input').value = '';
+  showScreen('screen-call');
+  startTimer();
+  addBubble('doctor', 'はい、' + sc.dept + 'です。', sc.dept + '医師');
+}
+
+function startTimer(){
+  state.startTime = Date.now();
+  clearInterval(state.timerInterval);
+  state.timerInterval = setInterval(()=>{
+    const s = Math.floor((Date.now()-state.startTime)/1000);
+    const mm = String(Math.floor(s/60)).padStart(2,'0');
+    const ss = String(s%60).padStart(2,'0');
+    document.getElementById('call-timer').textContent = mm+':'+ss;
+  }, 1000);
+}
+
+function addBubble(role, text, who){
+  const area = document.getElementById('chat-area');
+  const b = document.createElement('div');
+  b.className = 'bubble ' + (role==='doctor' ? 'doctor' : 'me');
+  if(role==='doctor'){
+    b.innerHTML = `<div class="who">${who||''}</div>${escapeHtml(text)}`;
+  } else {
+    b.textContent = text;
+  }
+  area.appendChild(b);
+  area.scrollTop = area.scrollHeight;
+  window.scrollTo(0, document.body.scrollHeight);
+}
+
+function addTyping(){
+  const area = document.getElementById('chat-area');
+  const b = document.createElement('div');
+  b.className = 'bubble typing';
+  b.id = 'typing-indicator';
+  b.innerHTML = '<div class="typing-dots"><span></span><span></span><span></span></div>';
+  area.appendChild(b);
+  area.scrollTop = area.scrollHeight;
+}
+function removeTyping(){
+  const t = document.getElementById('typing-indicator');
+  if(t) t.remove();
+}
+
+function escapeHtml(s){
+  const d = document.createElement('div');
+  d.textContent = s;
+  return d.innerHTML;
+}
+
+function doctorSystemPrompt(sc){
+  return `あなたは日本の病院に勤務する医師「${sc.dept}」のロールプレイを行うAIです。以下の設定に厳密に従い、医師として自然に振る舞ってください。
+
+【あなたの設定】
+・診療科: ${sc.dept}
+・性格・対応スタイル: ${sc.persona}
+・状況: 診療の合間に、新人薬剤師からの内線電話を受けている。
+
+【今回の処方内容】
+${sc.drugs.join(String.fromCharCode(10))}
+
+【患者情報】
+${sc.patient}
+
+【あなただけが知っている疑義点(絶対に自分からは言わない)】
+${sc.issue}
+※この情報は電話をかけてきた新人薬剤師には絶対に教えないでください。演技の中で自然に反応するためだけに使ってください。
+
+【ロールプレイのルール】
+1. 常に医師本人として一人称で話してください。地の文・説明・カギ括弧でのセリフ表記・AIとしての発言は一切禁止です。返答は発話内容のみを出力してください。
+2. 薬剤師が名乗らずに用件を話し始めた場合、忙しい医師らしく一度だけ「え、どちら様?」等と軽く聞き返してください。それ以降は自然に会話を続けてください。
+3. 薬剤師が上記の疑義点について、具体的な根拠(体重・検査値・相互作用・アレルギー歴など)を添えて的確に指摘してきた場合のみ、性格設定の範囲内で納得し、処方変更や確認事項への回答に応じてください。
+4. 薬剤師の指摘があいまい・的外れ、または疑義点に触れていない場合は、すぐには納得せず、性格設定に沿って軽く聞き返す・押し切ろうとする等、リアルな反応をしてください。
+5. 返答は電話越しの会話として、1〜3文程度の短い口語体で返してください。長い説明はしないでください。
+6. 薬剤師のどの発言に対しても、医師として途切れず自然に応答してください。`;
+}
+
+async function callDoctor(){
+  addTyping();
+  document.getElementById('chat-error').innerHTML = '';
+  let raw = '';
+  try{
+    const response = await fetch(API_ENDPOINT, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        max_tokens: 300,
+        system: doctorSystemPrompt(state.scenario),
+        messages: state.messages
+      })
+    });
+    raw = await response.text();
+    let data;
+    try{ data = JSON.parse(raw); } catch(parseErr){
+      throw new Error('サーバーからの応答を解釈できませんでした (status ' + response.status + '): ' + raw.slice(0,200));
+    }
+    if(!response.ok){
+      throw new Error('APIエラー (status ' + response.status + '): ' + ((data && data.error && data.error.message) || raw.slice(0,200)));
+    }
+    if(!data.content){
+      throw new Error('応答にcontentがありません: ' + raw.slice(0,200));
+    }
+    const text = data.content.filter(b=>b.type==='text').map(b=>b.text).join('').trim();
+    if(!text){
+      throw new Error('AIからの返答が空でした。');
+    }
+    state.messages.push({role:'assistant', content: text});
+    addBubble('doctor', text, state.scenario.dept + '医師');
+  } catch(err){
+    removeTyping();
+    console.error('callDoctor error:', err, raw);
+    document.getElementById('chat-error').innerHTML = `<div class="err">通信エラーが発生しました。もう一度送信してください。<br>詳細: ${escapeHtml(err.message||String(err))}</div>`;
+    return;
+  }
+  removeTyping();
+}
+
+function sendMessage(){
+  const input = document.getElementById('chat-input');
+  const text = input.value.trim();
+  if(!text) return;
+  state.messages.push({role:'user', content: text});
+  addBubble('me', text);
+  input.value = '';
+  callDoctor();
+}
+
+document.getElementById('btn-send').addEventListener('click', sendMessage);
+document.getElementById('chat-input').addEventListener('keydown', e=>{
+  if(e.key==='Enter') sendMessage();
+});
+document.getElementById('btn-back').addEventListener('click', ()=>{
+  clearInterval(state.timerInterval);
+  showScreen('screen-menu');
+});
+
+function feedbackSystemPrompt(){
+  const sc = state.scenario;
+  const transcript = state.messages.map(m => (m.role==='user' ? '薬剤師: ' : '医師: ') + m.content).join(String.fromCharCode(10));
+  return `あなたは新人薬剤師向け疑義照会研修の指導薬剤師です。以下のロールプレイ会話記録を評価し、指定のJSON形式のみを出力してください。前後の説明文・挨拶・コードブロック(\`\`\`)は一切不要です。JSONオブジェクトのみを出力してください。
+
+【シナリオ】
+${sc.title}(${sc.dept})
+【処方内容】
+${sc.drugs.join(String.fromCharCode(10))}
+【患者情報】
+${sc.patient}
+【本来指摘すべきだった疑義点】
+${sc.issue}
+
+【評価観点】
+1. 電話の冒頭で名乗り・所属を伝えられていたか
+2. 疑義点を具体的な根拠(体重・検査値・相互作用・アレルギー歴など)を添えて的確に指摘できていたか
+3. 一方的な指摘ではなく、確認・相談の姿勢で話せていたか
+4. 代替案や次の一手を提案できていたか
+5. 処方医からの回答内容を明確に確認できていたか(記録に残すべき内容)
+
+【会話記録】
+${transcript}
+
+以下のキーを持つJSONオブジェクトのみを出力してください:
+{
+  "overallScore": 1から5の整数,
+  "issueIdentified": true または false,
+  "goodPoints": ["よかった点。実際の発言に触れながら具体的に。1〜3個"],
+  "improvementPoints": ["改善点。具体的に。1〜3個"],
+  "modelResponse": "この場面での模範的な疑義照会の切り出し方・伝え方の例。2〜3文。",
+  "summaryComment": "指導薬剤師からの一言コメント。2文程度。"
+}`;
+}
+
+document.getElementById('btn-end').addEventListener('click', async ()=>{
+  clearInterval(state.timerInterval);
+  if(state.messages.length === 0){
+    showScreen('screen-menu');
+    return;
+  }
+  showScreen('screen-feedback');
+  document.getElementById('fb-title').textContent = state.scenario.title + ' — 振り返り';
+  document.getElementById('fb-body').innerHTML = '<div class="loading-line">AIが会話記録を確認しています…</div>';
+
+  try{
+    const response = await fetch(API_ENDPOINT, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        max_tokens: 1200,
+        messages: [{ role: "user", content: feedbackSystemPrompt() }]
+      })
+    });
+    const raw = await response.text();
+    let data;
+    try{ data = JSON.parse(raw); } catch(parseErr){
+      throw new Error('サーバーからの応答を解釈できませんでした (status ' + response.status + '): ' + raw.slice(0,200));
+    }
+    if(!response.ok){
+      throw new Error('APIエラー (status ' + response.status + '): ' + ((data && data.error && data.error.message) || raw.slice(0,200)));
+    }
+    if(!data.content){
+      throw new Error('応答にcontentがありません: ' + raw.slice(0,200));
+    }
+    let text = data.content.filter(b=>b.type==='text').map(b=>b.text).join('').trim();
+    text = text.replace(/^```json/i,'').replace(/^```/,'').replace(/```$/,'').trim();
+    const fb = JSON.parse(text);
+    renderFeedback(fb);
+  } catch(err){
+    console.error('feedback error:', err);
+    document.getElementById('fb-body').innerHTML = `<div class="err">振り返りの生成に失敗しました。もう一度お試しください。<br>詳細: ${escapeHtml(err.message||String(err))}</div>
+      <div class="retry-row"><button class="secondary" id="fb-retry">再試行</button></div>`;
+    const retryBtn = document.getElementById('fb-retry');
+    if(retryBtn) retryBtn.addEventListener('click', ()=>document.getElementById('btn-end').click());
+  }
+});
+
+function renderFeedback(fb){
+  const score = Math.max(1, Math.min(5, Number(fb.overallScore)||3));
+  const stars = '★'.repeat(score) + '☆'.repeat(5-score);
+  const goodItems = (fb.goodPoints||[]).map(p=>`<li>${escapeHtml(p)}</li>`).join('');
+  const impItems = (fb.improvementPoints||[]).map(p=>`<li>${escapeHtml(p)}</li>`).join('');
+
+  document.getElementById('fb-body').innerHTML = `
+    <div class="fb-card">
+      <div class="fb-score">
+        <span class="stars">${stars}</span>
+        <span class="num">${score} / 5</span>
+      </div>
+      <span class="fb-verdict ${fb.issueIdentified ? 'ok':'ng'}">${fb.issueIdentified ? '疑義点を的確に指摘できていました' : '疑義点の指摘が不十分でした'}</span>
+
+      <div class="fb-section">
+        <h4>よかった点</h4>
+        <ul>${goodItems || '<li>特記事項なし</li>'}</ul>
+      </div>
+      <div class="fb-section">
+        <h4>改善点</h4>
+        <ul>${impItems || '<li>特記事項なし</li>'}</ul>
+      </div>
+      <div class="fb-section">
+        <h4>模範的な伝え方の例</h4>
+        <div class="fb-model">${escapeHtml(fb.modelResponse||'')}</div>
+      </div>
+      <div class="fb-comment">${escapeHtml(fb.summaryComment||'')}</div>
+    </div>
+    <div class="retry-row">
+      <button class="secondary" id="fb-retry-scenario">同じ事例をもう一度</button>
+      <button class="primary" id="fb-next">事例一覧へ</button>
+    </div>
+  `;
+  document.getElementById('fb-retry-scenario').addEventListener('click', ()=>startCall(state.scenario));
+  document.getElementById('fb-next').addEventListener('click', ()=>showScreen('screen-menu'));
+}
+
+renderMenu();
+</script>
+</body>
+</html>
