@@ -399,7 +399,7 @@ async function callDoctor(){
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        max_tokens: 300,
+        max_tokens: 600,
         system: doctorSystemPrompt(state.scenario),
         messages: state.messages
       })
