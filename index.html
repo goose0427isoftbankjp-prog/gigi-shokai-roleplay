@@ -467,24 +467,43 @@ if(!speechSupported){
   micBtn.title = 'このブラウザは音声入力に対応していません';
   micBtn.style.opacity = '0.4';
 } else {
+  let baseText = '';
   micBtn.addEventListener('click', ()=>{
-    if(recognizer) return;
+    if(recognizer){
+      recognizer.stop();
+      return;
+    }
     recognizer = new SpeechRecognitionCtor();
     recognizer.lang = 'ja-JP';
-    recognizer.interimResults = false;
+    recognizer.continuous = true;
+    recognizer.interimResults = true;
     recognizer.maxAlternatives = 1;
+    baseText = document.getElementById('chat-input').value.trim();
     micBtn.classList.add('listening');
-    micStatus.textContent = '聞き取り中…';
+    micStatus.textContent = '聞き取り中…（もう一度🎤を押すと終了）';
     recognizer.onresult = (e)=>{
-      const transcript = e.results[0][0].transcript;
-      document.getElementById('chat-input').value = transcript;
-      micStatus.textContent = '';
+      const input = document.getElementById('chat-input');
+      let newFinal = '';
+      let interimText = '';
+      for(let i = e.resultIndex; i < e.results.length; i++){
+        const transcript = e.results[i][0].transcript;
+        if(e.results[i].isFinal){
+          newFinal += transcript;
+        } else {
+          interimText += transcript;
+        }
+      }
+      if(newFinal){
+        baseText = (baseText ? baseText + ' ' : '') + newFinal;
+      }
+      input.value = interimText ? (baseText ? baseText + ' ' : '') + interimText : baseText;
     };
     recognizer.onerror = (e)=>{
       micStatus.textContent = '音声入力エラー: ' + (e.error === 'not-allowed' ? 'マイクの使用が許可されていません' : e.error);
     };
     recognizer.onend = ()=>{
       micBtn.classList.remove('listening');
+      micStatus.textContent = '';
       recognizer = null;
     };
     recognizer.start();
